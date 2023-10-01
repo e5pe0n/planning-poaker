@@ -1,0 +1,23 @@
+{
+  "name": "planning-poaker-socket-server",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.18",
+    "@types/node": "latest",
+    "@typescript-eslint/eslint-plugin": "^6.7.3",
+    "@typescript-eslint/parser": "^6.7.3",
+    "eslint": "^8.50.0",
+    "typescript": "^5.2.2"
+  },
+  "lint-staged": {
+    "**/*.{js,ts}": [
+      "prettier --write --ignore-unknown",
+      "eslint --fix"
+    ]
+  }
+}
