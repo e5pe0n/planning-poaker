@@ -133,6 +133,7 @@ dist
 
 .vscode/*
 !.vscode/settings.json
+!.vscode/planning-poaker.code-workspace
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
