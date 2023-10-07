@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "dev:next-app": "cd next-app && pnpm dev",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "start:socket-server": "cd socket-server && pnpm start",
+    "dev:socket-server": "cd socket-server && pnpm dev"
   },
   "devDependencies": {
     "eslint": "latest",
