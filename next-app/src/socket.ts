@@ -1,7 +1,6 @@
 import { io } from "socket.io-client";
+import { sharedConfig } from "./shared-config";
 
-const URL = "http://localhost:3001";
-
-export const socket = io(URL, {
+export const socket = io(sharedConfig.socketBaseUrl, {
   autoConnect: false,
 });

@@ -1,0 +1,39 @@
+# https://pnpm.io/docker
+FROM node:18-alpine AS base
+
+COPY . /app
+
+WORKDIR /app
+
+RUN yarn global add pnpm && pnpm i
+
+
+FROM base AS next-app
+
+COPY --from=base /app/next-app/node_modules/ /app/next-app/node_modules
+COPY --from=base /app/node_modules/@nextui-org/theme/dist/ /app/next-app/node_modules/@nextui-org/theme/dist
+
+COPY next-app/src /app/next-app/src
+COPY next-app/public /app/next-app/public
+COPY next-app/next.config.js /app/next-app/next.config.js
+COPY next-app/tsconfig.json /app/next-app/tsconfig.json
+
+# Next.js collects completely anonymous telemetry data about general usage. Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line to disable telemetry at run time
+# ENV NEXT_TELEMETRY_DISABLED 1
+
+# Note: Don't expose ports here, Compose will handle that for us
+
+# Start Next.js in development mode based on the preferred package manager
+WORKDIR /app/next-app
+CMD pnpm dev
+
+
+FROM base AS socket-server
+
+COPY --from=base /app/socket-server/node_modules/ /app/socket-server/node_modules
+COPY socket-server/src /app/socket-server/src
+COPY socket-server/tsconfig.json /app/socket-server/tsconfig.json
+
+WORKDIR /app/socket-server
+CMD pnpm dev

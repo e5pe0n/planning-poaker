@@ -1,12 +1,23 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import * as dotenv from "dotenv";
+import * as env from "env-var";
+import path from "path";
+
+if (process.env.APP_ENV === "local") {
+  dotenv.config({ path: path.join(__dirname, "../.env.local") });
+}
+
+const config = {
+  frontendOrigin: env.get("FRONTEND_ORIGIN").required().asString(),
+} as const;
 
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: config.frontendOrigin,
   },
 });
 

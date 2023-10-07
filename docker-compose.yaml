@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  next-app:
+    container_name: next-app
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: next-app
+    volumes:
+      - ./next-app/src:/app/next-app/src
+      - ./next-app/public:/app/next-app/public
+    restart: always
+    ports:
+      - 3000:3000
+    env_file:
+      - ./next-app/.env.local
+
+  socket-server:
+    container_name: socket-server
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: socket-server
+    volumes:
+      - ./socket-server/src:/app/socket-server/src
+    restart: always
+    ports:
+      - 3001:3001
+    env_file:
+      - ./socket-server/.env.local
+    environment:
+      - APP_ENV=local
+
+# Define a network, which allows containers to communicate
+# with each other, by using their container name as a hostname
+networks:
+  my_network:
+    external: true
