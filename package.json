@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dev:next-app": "cd next-app && pnpm dev",
     "prepare": "husky install"
   },
   "devDependencies": {
