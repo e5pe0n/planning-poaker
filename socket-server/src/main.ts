@@ -21,6 +21,8 @@ const io = new Server(server, {
   },
 });
 
+const rooms = new Map<string, Set<string>>();
+
 io.on("connection", (socket) => {
   console.log("a user connected");
 
@@ -31,6 +33,33 @@ io.on("connection", (socket) => {
   socket.on("chat message", (message: string) => {
     console.log("message:", message);
     io.emit("chat message", message);
+  });
+
+  socket.on("join", (data: { roomId: string; username: string }) => {
+    const { roomId, username } = data;
+    socket.join(roomId);
+    const users = (rooms.get(roomId) ?? new Set()).add(username);
+    rooms.set(roomId, users);
+    io.to(roomId).emit(
+      "join",
+      `${Array.from(users.values()).join(", ") || "no one"} in Room(${roomId})`,
+    );
+  });
+
+  socket.on("leave", (data: { roomId: string; username: string }) => {
+    const { roomId, username } = data;
+    const users = rooms.get(roomId) ?? new Set();
+    users.delete(username);
+    rooms.set(roomId, users);
+    io.to(roomId).emit(
+      "leave",
+      `${Array.from(users.values()).join(", ") || "no one"} in Room(${roomId})`,
+    );
+    socket.leave(roomId);
+  });
+
+  socket.on("reset", () => {
+    rooms.clear();
   });
 });
 
