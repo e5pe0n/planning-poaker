@@ -4,6 +4,7 @@ import { Server } from "socket.io";
 import * as dotenv from "dotenv";
 import * as env from "env-var";
 import path from "path";
+import { randomUUID } from "crypto";
 
 if (process.env.APP_ENV === "local") {
   dotenv.config({ path: path.join(__dirname, "../.env.local") });
@@ -21,45 +22,54 @@ const io = new Server(server, {
   },
 });
 
-const rooms = new Map<string, Set<string>>();
+const rooms = new Map<string, Map<string, number | undefined>>();
+
+app.use(express.json());
+
+app.post("/room", (req, res) => {
+  const roomId = randomUUID();
+  rooms.set(roomId, new Map());
+  res.redirect(`${config.frontendOrigin}/host/${roomId}`);
+});
+
+app.post("/join", (req, res) => {
+  const { roomId, username } = req.body;
+  const votes = rooms.get(roomId);
+  if (!votes) {
+    return res.status(400).end();
+  }
+
+  rooms.set(roomId, votes.set(username, undefined));
+  res.redirect(`${config.frontendOrigin}/room/${roomId}/${username}`);
+});
 
 io.on("connection", (socket) => {
-  console.log("a user connected");
+  const { roomId, username } = socket.handshake.auth;
 
-  socket.on("disconnect", () => {
-    console.log("a user disconnectted");
+  socket.on("vote", (n: number) => {
+    const votes = rooms.get(roomId)!;
+    votes.set(username, n);
+
+    const ns = Array.from(votes.values());
+    if (ns.every((n): n is number => n !== undefined)) {
+      socket.emit("decided", Object.fromEntries(votes.entries()));
+    }
   });
 
-  socket.on("chat message", (message: string) => {
-    console.log("message:", message);
-    io.emit("chat message", message);
-  });
-
-  socket.on("join", (data: { roomId: string; username: string }) => {
-    const { roomId, username } = data;
-    socket.join(roomId);
-    const users = (rooms.get(roomId) ?? new Set()).add(username);
-    rooms.set(roomId, users);
-    io.to(roomId).emit(
-      "join",
-      `${Array.from(users.values()).join(", ") || "no one"} in Room(${roomId})`,
-    );
-  });
-
-  socket.on("leave", (data: { roomId: string; username: string }) => {
-    const { roomId, username } = data;
-    const users = rooms.get(roomId) ?? new Set();
-    users.delete(username);
-    rooms.set(roomId, users);
-    io.to(roomId).emit(
-      "leave",
-      `${Array.from(users.values()).join(", ") || "no one"} in Room(${roomId})`,
-    );
-    socket.leave(roomId);
+  socket.on("start", () => {
+    socket.in(roomId).emit("start");
   });
 
   socket.on("reset", () => {
     rooms.clear();
+  });
+
+  socket.on("error", () => {
+    socket.disconnect();
+  });
+
+  socket.on("disconnect", () => {
+    console.log("a user disconnectted");
   });
 });
 
